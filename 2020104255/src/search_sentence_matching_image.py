@@ -35,4 +35,8 @@ if __name__ == "__main__":
     }
     res = es.search(body=body,index="sentence_features",timeout='100s')
     hits = res["hits"]["hits"]
-    print(res)
+    for hit in hits:
+        print(
+            f"score: {hit['_score']}, sentence: {hit['_source']['sentence']}"
+        )
+    # print(hits)
