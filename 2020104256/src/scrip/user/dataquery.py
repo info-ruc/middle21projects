@@ -19,7 +19,9 @@ from pdfminer.layout import *
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from sklearn import feature_extraction
-from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer,TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer, TfidfVectorizer
+import user.dataset
+
 
 def text_to_words(text):
     word_list_text = []
@@ -47,7 +49,7 @@ def text_to_words(text):
     return word_list_text
 
 
-def pdf_to_words(path,flag):
+def pdf_to_words(path, flag):
     pdf_file = open(path, mode='rb')  # 以二进制读模式打开
     print('current pdf path:  ', path, '\n')
 
@@ -108,15 +110,15 @@ def title_key(title, dataframe):
     for i in range(len(dataframe)):
         titles.append(title)
         relations.append('key')
-        
-    datas = {'title': titles, 'relation': relations,'key': dataframe}
+
+    datas = {'title': titles, 'relation': relations, 'key': dataframe}
     csv = pandas.DataFrame(data=datas)
-    csv.to_csv("./data/title_key.csv", mode='a',header=False,index=False, sep=',')
+    csv.to_csv("./data/title_key.csv", mode='a', header=False, index=False, sep=',')
 
 
 def title_author(dataframe):
     csv = pandas.DataFrame(data=dataframe)
-    csv.to_csv("./data/title_author.csv", mode='a',header=False,index=False, sep=',')
+    csv.to_csv("./data/title_author.csv", mode='a', header=False, index=False, sep=',')
 
 
 def file_name(file_dir):
@@ -125,15 +127,18 @@ def file_name(file_dir):
         for root2, dirs2, files2 in os.walk(file_dir + "/" + dir):
             for file in files2:
                 info = os.path.splitext(file)
-                if os.path.splitext(file)[1] == '.pdf' and ('fig' not in os.path.splitext(file)[0])  and ('Fig' not in os.path.splitext(file)[0]) \
-                        and ('fig' not in root2) and ('Fig' not in root2) and ('example' not in os.path.splitext(file)[0]) and ('graph' not in os.path.splitext(file)[0]) \
-                        and ('img' not in root2) and ('Graph' not in os.path.splitext(file)[0]) and ('square' not in os.path.splitext(file)[0]) and ('alns' not in os.path.splitext(file)[0]) \
+                if os.path.splitext(file)[1] == '.pdf' and ('fig' not in os.path.splitext(file)[0]) and (
+                        'Fig' not in os.path.splitext(file)[0]) \
+                        and ('fig' not in root2) and ('Fig' not in root2) and (
+                        'example' not in os.path.splitext(file)[0]) and ('graph' not in os.path.splitext(file)[0]) \
+                        and ('img' not in root2) and ('Graph' not in os.path.splitext(file)[0]) and (
+                        'square' not in os.path.splitext(file)[0]) and ('alns' not in os.path.splitext(file)[0]) \
                         and ('chart' not in os.path.splitext(file)[0]) and ('Chart' not in os.path.splitext(file)[0]):
                     print(file)
                     # pdf = open(root2 + "/" + file, mode='rb')
                     result = pdf_to_words(root2 + "/" + file, 2)
                     print(result)
-                    if result and len(result)>1 and '1\n' not in result and 'A\n' not in result:
+                    if result and len(result) > 1 and '1\n' not in result and 'A\n' not in result:
                         tf_dataframe = get_key_words(result)
                         print(tf_dataframe.iloc[:10, :])
                         title_key(os.path.splitext(file)[0], tf_dataframe.iloc[:10, :]['term'])
@@ -204,7 +209,7 @@ def file_name(file_dir):
                             if 'author' in l and 'title' in l:
                                 print(l['author'])
                                 print(l['title'])
-                                d = {'author': [l['author']], 'relation':['author'], 'title': [l['title']]}
+                                d = {'author': [l['author']], 'relation': ['author'], 'title': [l['title']]}
                                 title_author(d)
 
 
@@ -241,7 +246,9 @@ def file_name(file_dir):
 #                 if 'key' in datas.columns:
 #                     tri['key'] = data.key
 
-driver = GraphDatabase.driver("neo4j://localhost:7687",auth=("neo4j", "123123"))
+driver = GraphDatabase.driver("neo4j://localhost:7687", auth=("neo4j", "123123"))
+
+
 def load_data():
     with driver.session() as session:
         session.run("""MATCH ()-[r]->() DELETE r""")
@@ -258,13 +265,13 @@ def load_data():
                                 CREATE (u)-[:Rela {rela: csv.rela}]->(m)""")
 
 
-def queries():
-    while True:
-        chose = int(input("查询模式（1.查作者，2.查文献，3.查领域）："))
+def queries(chose,query):
+    # while True:
+    #     chose = int(input("查询模式（1.查作者，2.查文献，3.查领域）："))
         if chose == 1:
             author = input("查询的作者名字：")
             with driver.session() as session:
-                q = session.run(f"""MATCH (a:Author {{name:{author}}} )-[Rela:rela]->(p:Paper)
+                q = session.run(f"""MATCH (a:Author {{name:{query}}} )-[Rela:rela]->(p:Paper)
                 RETURN p.title as title""")
                 result = []
                 keyword = []
@@ -279,16 +286,18 @@ def queries():
                 print(result)
                 print("该作者的领域：")
                 print(keyword)
+                r = {"该作者的作品：" + result + "\n该作者的领域：" + keyword}
+                return r
         elif chose == 2:
             title = input("查询的文献名字：")
             with driver.session() as session:
-                q = session.run(f"""MATCH (a:Author )-[Rela:rela]->(p:Paper {{title:{title}}})
+                q = session.run(f"""MATCH (a:Author )-[Rela:rela]->(p:Paper {{title:{query}}})
                 RETURN a.name as name""")
                 result = []
                 keyword = []
                 for i in enumerate(q):
                     result.append(i["name"])
-                    q2 = session.run(f"""MATCH (p:Paper {{title:{title}}} )-[Rela:rela]->(k:Key)
+                    q2 = session.run(f"""MATCH (p:Paper {{title:{query}}} )-[Rela:rela]->(k:Key)
                             RETURN k.keyword as keyword""")
                     for j in enumerate(q2):
                         keyword.append(j["keyword"])
@@ -297,29 +306,36 @@ def queries():
                 print(result)
                 print("该作品的领域：")
                 print(keyword)
+                r = {"该作品的作者：" + result + "\n该作品的领域：" + keyword}
+                return r
         elif chose == 3:
             keyword = input("查询的领域：")
             with driver.session() as session:
-                q = session.run(f"""MATCH (p:Paper  )-[Rela:rela]->(k:Key  {{keyword:{keyword}}})
+                q = session.run(f"""MATCH (p:Paper  )-[Rela:rela]->(k:Key  {{keyword:{query}}})
                         RETURN p.title as title""")
                 result = []
                 for i in enumerate(q):
                     result.append(i["title"])
                 print("该领域的作品：")
                 print(result)
+                r = {"该领域的作品：" + result }
+                return r
         else:
             print('输入异常')
+            r = {'输入异常'}
+            return r
 
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
 # data = pandas.read_csv('./data/title_author.csv',encoding='gbk')
 # file_name("./data")
 # load_data()
-queries()
-#------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------
 # file_name("D:\baiduyun\Arxiv6K")
 # # #
 # graph = Graph('http://localhost:7474', name='neo4j', password='123123')
