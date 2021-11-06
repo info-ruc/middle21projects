@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Login</title>
+
+</head>
+
+<body>
+
+   <form action="/index" method="post">
+
+      {% csrf_token %}
+
+      <p>
+
+          <label>查询模式</label>
+
+          <input name="chose" type="text">
+
+      </p>
+
+      <p>
+
+          <label>内容</label>
+
+          <input name="query" type="text">
+
+          <input type="submit" value="提交" >
+
+          <span style="color: red;">{{results }}</span>
+
+      </p>
+
+  </form>
+
+ </body>
