@@ -4,18 +4,24 @@ reports collected for Middleware class project @2021
 
 # Report Naming Convension
 ```
-2020104256（folder）  
+student_id（folder）  
   ┃
-  ┗ 2020104256.md / 2020104256.docx / ...  
+  ┗ student_id.md / student_id.docx / ...  
   ┃
   ┗ src (folder)
   ┃  ┃
-  ┃  ┗ 
-  ┃  ┗ data (folder) for datasets > 100M, please use pan.baidu.com, and leave url here.
+  ┃  ┗ scripts (folder) for codes.
+  ┃  ┗ dataset (folder) for datasets > 100M, please use pan.baidu.com, and leave url here.
   ┃
-  ┗ 
+  ┗ extra (folder) extra files used for the project
   
 ```
  
 # Pick a task
-task2
+[Tasks](./tasks.md)
+
+# Submit your project
+[How to](./Submission-Howto.md)
+
+# Submission Deadline
+2021-11-06
