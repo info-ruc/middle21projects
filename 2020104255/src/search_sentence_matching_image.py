@@ -8,7 +8,10 @@ import clip
 from PIL import Image
 
 if __name__ == "__main__":
-    image_path = "../extra/example/cat.jpeg"
+    # image_path = "/Users/yyj/PycharmProjects/middle21projects/2020104255/extra/Arxiv6K.part4/2001.00338/chem2.png"
+    # image_path = "/Users/yyj/PycharmProjects/middle21projects/2020104255/extra/Arxiv6K.part4/2001.08779/chart.png"
+    # image_path = "/Users/yyj/PycharmProjects/middle21projects/2020104255/extra/Arxiv6K.part4/2010.01676/CNN.png"
+    image_path = "/Users/yyj/PycharmProjects/middle21projects/2020104255/extra/Arxiv6K.part4/2010.02354/images/torch_code_white.png"
     es = Elasticsearch()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/16", device=device)
@@ -33,10 +36,10 @@ if __name__ == "__main__":
             }
         }
     }
-    res = es.search(body=body,index="sentence_features",timeout='100s')
+    res = es.search(body=body,index="sentence_features",timeout="10m")
     hits = res["hits"]["hits"]
     for hit in hits:
         print(
-            f"score: {hit['_score']}, sentence: {hit['_source']['sentence']}"
+            f"score: {hit['_score']}, sentence: {hit['_source']['sentence'].strip()}"
         )
     # print(hits)
