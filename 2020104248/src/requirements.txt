@@ -1,0 +1,12 @@
+# python==3.8.12
+numpy
+scipy
+elasticsearch
+r
+torch
+torchvision
+# git+https://github.com/openai/CLIP.git
+ftfy
+regex
+tqdm
+nltk
